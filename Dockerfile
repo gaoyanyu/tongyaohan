@@ -1,7 +1,13 @@
-FROM golang:1.24
+FROM golang:1.24 AS builder
 
-# 创建目标目录并设置权限
-RUN mkdir -p /var/log/containers /var/containers /data /app && \
-    chmod 755 /var/log/containers /var/containers /data /app
+WORKDIR /usr/src/app
 
+COPY . .
+RUN go build -o test -ldflags "-s -w" .
 
+FROM golang:1.24 AS runtime
+
+WORKDIR /usr/local/bin
+
+COPY --from=builder /usr/src/app/test .
+CMD ["./test"]
